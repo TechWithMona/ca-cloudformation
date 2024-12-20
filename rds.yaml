@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'creating RDS database'
+
+Resources:
+  
+  MyDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: 'db-test-free'
+      MasterUsername: 'admin'
+      MasterUserPassword: 'Rdsawscloud56789!'
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 20
+      Engine: MySQL
+      EngineVersion: '8.0.39'
+      BackupRetentionPeriod: 7
