@@ -1,16 +1,16 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'creating RDS database'
+AWSTemplateFormatVersion: '2010-09-09'  # Specifies the version of the AWS CloudFormation template format
+Description: 'Creating RDS Database instance with MySQL engine'  # A brief description of what this template does
 
 Resources:
-  
+# Define the RDS Database Instance
   MyDBInstance:
-    Type: AWS::RDS::DBInstance
+    Type: 'AWS::RDS::DBInstance'  # Specifies that we're creating an RDS instance
     Properties:
-      DBInstanceIdentifier: 'db-test-free'
-      MasterUsername: 'admin'
-      MasterUserPassword: 'Rdsawscloud56789!'
-      DBInstanceClass: db.t4g.micro
-      AllocatedStorage: 20
-      Engine: MySQL
-      EngineVersion: '8.0.39'
-      BackupRetentionPeriod: 7
+      DBInstanceIdentifier: 'db-test-free1'  # The name of the RDS instance, must be unique within the AWS region
+      MasterUsername: 'admin'  # Username used to log into the database, typically with full administrative privileges
+      MasterUserPassword: password  # Password associated with the master username. This must be securely handled
+      DBInstanceClass: 'db.t4g.micro'  # Specifies the instance size (memory, CPU). Suitable for light workloads
+      AllocatedStorage: 20  # The storage for the database instance in GB (minimum is 5 GB for RDS)
+      Engine: 'MySQL'  # Specifies that MySQL is being used as the database engine
+      EngineVersion: '8.0.39'  # Specific version of MySQL. This can be updated as new versions are released.
+      BackupRetentionPeriod: 7  # How many days backups are retained. Here it is set to 7 days.
