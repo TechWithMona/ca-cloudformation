@@ -1,27 +1,30 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 's3 static file hosting'
-
+Description: 'S3 Static Website Hosting'
 
 Resources:
+  # Create an S3 bucket for static website hosting
   MyS3Bucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: 'my-static-website-mkcloud'
+      BucketName: 'static-website-mkcloud' # Unique bucket name for storing website files
       WebsiteConfiguration:
-        IndexDocument: 'index.html'
+        IndexDocument: 'index.html' # Specifies the default page to display (index.html)
       PublicAccessBlockConfiguration:
-        RestrictPublicBuckets: false
+        BlockPublicAcls: false       # Allow public access to the bucket
+        BlockPublicPolicy: false     # Do not block bucket policies with public access
+        IgnorePublicAcls: false      # Respect public ACLs
+        RestrictPublicBuckets: false # Do not restrict public bucket access
 
+  # Define a bucket policy to make the objects publicly readable
   BucketPolicy:
-    Type: AWS::S3::BucketPolicy
+    Type: 'AWS::S3::BucketPolicy'
     Properties:
-      Bucket: !Ref MyS3Bucket
+      Bucket: !Ref MyS3Bucket # Reference the bucket created above
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: '2012-10-17' # IAM policy version
         Statement:
-          - Sid: 'PublicReadObject'
-            Effect: 'Allow'
-            Principle: '*'
-            Action: 's3:GetObject'
-            Resource: !Sub 'arn:aws:s3:::${MyS3Bucket}/*'
-
+          - Sid: 'PublicReadObject' # Statement identifier
+            Effect: 'Allow'         # Allow access
+            Principal: '*'          # Public access (any user)
+            Action: 's3:GetObject'  # Allow read-only access to objects
+            Resource: !Sub 'arn:aws:s3:::${MyS3Bucket}/*' # Grant access to all objects in the bucket

@@ -4,4 +4,4 @@ Resources:
   s3Bucket:
     Type: AWS::S3::Bucket
     Properties: 
-      BucketName: ohio-my-bucket-unique
+      BucketName: my-bucket-unique
