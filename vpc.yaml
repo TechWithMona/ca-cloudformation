@@ -124,7 +124,7 @@ Resources:
     Properties:
       InstanceType: t2.micro
       KeyName: bastion
-      ImageId: ami-0c80e2b6ccb9ad6d1
+      ImageId: ami-xxxxxxxxxxxxxxxxxxx
       SubnetId: !Ref PublicSubnet2A
       SecurityGroupIds:
         - !Ref BastionSG
@@ -144,7 +144,7 @@ Resources:
           ToPort: 22
           CidrIp: 70.178.5.109/32
 
-  # ami-0c80e2b6ccb9ad6d1
+  # ami-xxxxxxxxxxxxxxxxxxx
 
   # AppInstance2A
   AppInstance2A:
@@ -152,7 +152,7 @@ Resources:
     Properties:
       InstanceType: t2.micro
       KeyName: bastion
-      ImageId: ami-0c80e2b6ccb9ad6d1
+      ImageId: ami-xxxxxxxxxxxxxxxxxxx
       SubnetId: !Ref AppPrivateSubnet2A
       SecurityGroupIds:
         - !Ref AppInstance2ASG
@@ -166,7 +166,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId: ami-0c80e2b6ccb9ad6d1
+      ImageId: ami-xxxxxxxxxxxxxxxxxxx
       SubnetId: !Ref AppPrivateSubnet2B
       SecurityGroupIds:
         - !Ref AppInstance2BSG
