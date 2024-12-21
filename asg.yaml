@@ -1,30 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'CloudFormation for VPC'
+Description: 'CloudFormation for VPC with Auto Scaling and Elastic Load Balancing'
+
 Resources:
-  # My VPC
+  
+  # My VPC - Virtual Private Cloud for networking setup
   MyVPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: '172.16.0.0/16'
+      CidrBlock: '172.16.0.0/16'  # Define the IP range for the VPC
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
         - Key: Name
           Value: MyVPC
 
-  # Public Subnet in AZ 1
+  # Public Subnet in AZ 1 - Subnet for public-facing resources
   PublicSubnet2A:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
       CidrBlock: '172.16.1.0/24'
-      AvailabilityZone: !Select [0, !GetAZs '']
-      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']  # First AZ in the region
+      MapPublicIpOnLaunch: true  # Assign public IPs to instances
       Tags:
         - Key: Name
           Value: PublicSubnet2A
 
-  # AppPrivate Subnet in AZ 1
+  # AppPrivate Subnet in AZ 1 - Subnet for app-related resources
   AppPrivateSubnet2A:
     Type: AWS::EC2::Subnet
     Properties:
@@ -35,7 +37,7 @@ Resources:
         - Key: Name
           Value: AppPrivateSubnet2A
 
-  # DataPrivate Subnet in AZ 1
+  # DataPrivate Subnet in AZ 1 - Subnet for private data resources
   DataPrivateSubnet2A:
     Type: AWS::EC2::Subnet
     Properties:
@@ -46,40 +48,7 @@ Resources:
         - Key: Name
           Value: DataPrivateSubnet2A
 
-  # Public Subnet in AZ 2
-  PublicSubnet2B:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVPC
-      CidrBlock: '172.16.4.0/24'
-      AvailabilityZone: !Select [1, !GetAZs '']
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: PublicSubnet2B
-
-  # AppPrivate Subnet in AZ 2
-  AppPrivateSubnet2B:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVPC
-      CidrBlock: '172.16.5.0/24'
-      AvailabilityZone: !Select [1, !GetAZs '']
-      Tags:
-        - Key: Name
-          Value: AppPrivateSubnet2B
-  # DataPrivate Subnet in AZ 2
-  DataPrivateSubnet2B:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVPC
-      CidrBlock: '172.16.6.0/24'
-      AvailabilityZone: !Select [1, !GetAZs '']
-      Tags:
-        - Key: Name
-          Value: DataPrivateSubnet2B
-
-  # InternetGateway IGW
+  # InternetGateway - Allows communication with the internet
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -87,14 +56,14 @@ Resources:
         - Key: Name
           Value: MyInternetGateway
 
-  # Attach gateway
+  # Attach gateway to VPC
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref MyVPC
       InternetGatewayId: !Ref InternetGateway
 
-  # route table
+  # Public Route Table for routing internet traffic
   PublicRoutetable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -103,7 +72,7 @@ Resources:
         - Key: Name
           Value: PublicRoutetable
 
-  # Define Public Route to access internet
+  # Public route for internet access
   PublicRoute:
     Type: AWS::EC2::Route
     Properties:
@@ -111,60 +80,60 @@ Resources:
       DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref InternetGateway
 
-  # Define Public Subnet 2A Association
-  PublicSubnet2ARouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnet2A
-      RouteTableId: !Ref PublicRoutetable
-
-
-
+  # Security Group for web servers to allow HTTP traffic
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: 'Enable http access'
+      GroupDescription: 'Enable HTTP access'
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
         - IpProtocol: 'tcp'
           FromPort: '80'
           ToPort: '80'
-          CidrIp: '0.0.0.0/0'
+          CidrIp: '0.0.0.0/0'  # Allow HTTP traffic from anywhere
 
-  MyLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  # Launch Template for Auto Scaling instances (Replacing LaunchConfiguration)
+  MyLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      ImageId: ami-0c80e2b6ccb9ad6d1
-      InstanceType: t2.micro
-      SecurityGroups:
-        - !Ref WebServerSecurityGroup
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          yum install -y httpd
-          systemctl start httpd
-          systemctl enable httpd
-          echo 'Hello from AutoScaling' > /var/www/html/index.html
+      LaunchTemplateName: 'MyWebServerTemplate'
+      VersionDescription: 'v1'
+      LaunchTemplateData:
+        ImageId: ami-xxxxxxxxxxxxxxxxxxx  # AMI ID for web servers
+        InstanceType: t2.micro  # Instance type for Auto Scaling group
+        SecurityGroupIds:
+          - !Ref WebServerSecurityGroup
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum install -y httpd
+            systemctl start httpd
+            systemctl enable httpd
+            echo 'Hello from AutoScaling' > /var/www/html/index.html
 
-  #ASG
+  # Auto Scaling Group to manage instances
   MyAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      LaunchConfigurationName: !Ref MyLaunchConfiguration
-      MinSize: 1
-      MaxSize: 3
-      DesiredCapacity: 2
+      LaunchTemplate:
+        LaunchTemplateName: !Ref MyLaunchTemplate
+        Version: '1'
+      MinSize: 1  # Minimum number of instances
+      MaxSize: 3  # Maximum number of instances
+      DesiredCapacity: 2  # Desired number of instances
       VPCZoneIdentifier:
         - !Ref PublicSubnet2A
         - !Ref PublicSubnet2B
-        
+      Tags:
+        - Key: Name
+          Value: AutoScalingWebServer
+          PropagateAtLaunch: true
 
-  #Alarm
-
+  # CloudWatch Alarm to trigger scaling action when CPU exceeds 70%
   HighCPUAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: 'Alarm when cpu exceeds 70%'
+      AlarmDescription: 'Alarm when CPU exceeds 70%'
       MetricName: 'CPUUtilization'
       Namespace: 'AWS/EC2'
       Statistic: Average
@@ -178,12 +147,12 @@ Resources:
       AlarmActions:
         - !Ref ScaleOutPolicy
 
+  # Scaling Policy for Auto Scaling group
   ScaleOutPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
       AutoScalingGroupName: !Ref MyAutoScalingGroup
       PolicyType: SimpleScaling
-      ScalingAdjustment: '1'
-      Cooldown: '300'
+      ScalingAdjustment: '1'  # Add one instance when the alarm triggers
+      Cooldown: '300'  # Cooldown period after scaling action
       AdjustmentType: ChangeInCapacity
-
